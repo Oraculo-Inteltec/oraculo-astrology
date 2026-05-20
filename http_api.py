@@ -33,10 +33,39 @@ class SynastryRequest(BaseModel):
     second: Subject
 
 
+_SCORE_BANDS = [
+    (0,  5,  "Null"),
+    (5,  10, "Mediocre"),
+    (10, 15, "Important"),
+    (15, 20, "Very Important"),
+    (20, None, "Exceptional"),
+]
+
+
+def _score_label(score: int) -> str:
+    for low, high, label in _SCORE_BANDS:
+        if high is None or score < high:
+            return label
+    return "Exceptional"
+
+
+def _score_note(score: int) -> str:
+    label = _score_label(score)
+    return (
+        f"{label} (score {score}). "
+        "Scale: 0–5 Null | 5–10 Mediocre | 10–15 Important | 15–20 Very Important | 20+ Exceptional. "
+        "The scale has no upper ceiling — 20 and 60 are both 'Exceptional' but very different. "
+        "Interpret proportionally: a score built from several 4-pt base aspects carries less weight "
+        "than the same total achieved through high-value Sun–Sun or Sun–Moon conjunctions (8–11 pts each)."
+    )
+
+
 class SynastryResponse(BaseModel):
     first_subject_name: str
     second_subject_name: str
     score: int
+    score_label: str
+    score_note: str
     is_destiny_sign: bool
     relevant_aspects: list
     relevant_default_aspects: list
@@ -97,6 +126,8 @@ def create_synastry(request: SynastryRequest) -> SynastryResponse:
         first_subject_name=first.name,
         second_subject_name=second.name,
         score=score.score,
+        score_label=_score_label(score.score),
+        score_note=_score_note(score.score),
         is_destiny_sign=score.is_destiny_sign,
         relevant_aspects=score.relevant_aspects,
         relevant_default_aspects=score.relevant_default_aspects,
