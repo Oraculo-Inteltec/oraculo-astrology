@@ -50,26 +50,70 @@ def _score_label(score: int) -> str:
 
 
 def _score_note(score: int) -> str:
-    label = _score_label(score)
-    return (
-        f"{label} (score {score}). "
-        "Scale: 0–5 Null | 5–10 Mediocre | 10–15 Important | 15–20 Very Important | 20+ Exceptional. "
-        "Practical ceiling is ~40–55 pts (theoretical max ~78). "
-        "20 is the minimum threshold for Exceptional, not a high score. "
-        "Interpret proportionally: a score built from several 4-pt base aspects carries less weight "
-        "than the same total achieved through high-value Sun–Sun or Sun–Moon conjunctions (8–11 pts each)."
-    )
+    if score < 5:
+        return "Conexão passageira — pouco peso astral entre os dois mapas."
+    elif score < 10:
+        return "Conexão leve — existe um fio, mas sem estrutura maior."
+    elif score < 15:
+        return "Conexão com substância — tensão e atração reais estão presentes."
+    elif score < 20:
+        return "Conexão importante — esses dois mapas têm uma conversa clara."
+    elif score < 28:
+        return (
+            "Conexão no limiar do excepcional — sólida, mas construída principalmente "
+            "sobre aspectos de base (4pts). Faltam os grandes eixos — conjunção Sol-Sol "
+            "ou Sol-Lua — que definiriam algo verdadeiramente raro."
+        )
+    elif score < 38:
+        return "Conexão solidamente excepcional — presença real de eixos estruturantes entre os mapas."
+    else:
+        return "Conexão excepcionalmente densa — raríssima, com múltiplos eixos de conjunção de alto valor."
+
+
+_SIGNS = [
+    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+]
+
+_PLANET_LABELS = {
+    "Sun": "Sol", "Moon": "Lua", "Mercury": "Mercúrio", "Venus": "Vênus",
+    "Mars": "Marte", "Jupiter": "Júpiter", "Saturn": "Saturno",
+    "Uranus": "Urano", "Neptune": "Netuno", "Pluto": "Plutão",
+    "First_House": "Ascendente",
+}
+
+_ASPECT_LABELS = {
+    "conjunction": "conjunção", "opposition": "oposição", "trine": "trígono",
+    "square": "quadratura", "sextile": "sextil",
+}
+
+
+def _sign_from_abs(pos: float) -> str:
+    return _SIGNS[int(pos / 30) % 12]
+
+
+def _fmt_aspect(a: dict) -> dict:
+    p1 = _PLANET_LABELS.get(a["p1_name"], a["p1_name"])
+    p2 = _PLANET_LABELS.get(a["p2_name"], a["p2_name"])
+    aspect = _ASPECT_LABELS.get(a["aspect"], a["aspect"])
+    orbit = round(abs(a["orbit"]), 1)
+    exact = orbit <= 1.0
+    p1_sign = _sign_from_abs(a.get("p1_abs_pos", 0))
+    p2_sign = _sign_from_abs(a.get("p2_abs_pos", 0))
+    return {
+        "description": f"{p1} ({p1_sign}) {aspect} {p2} ({p2_sign})",
+        "aspect_type": a["aspect"],
+        "orbit_degrees": orbit,
+        "exact": exact,
+    }
 
 
 class SynastryResponse(BaseModel):
     first_subject_name: str
     second_subject_name: str
-    score: int
-    score_label: str
-    score_note: str
+    connection_quality: str  # qualitative description — do not show any numeric score
     is_destiny_sign: bool
-    relevant_aspects: list
-    relevant_default_aspects: list
+    aspects: list  # formatted aspects with sign names — use these verbatim
 
 
 def _build_subject(s: Subject) -> AstrologicalSubject:
@@ -126,12 +170,9 @@ def create_synastry(request: SynastryRequest) -> SynastryResponse:
     return SynastryResponse(
         first_subject_name=first.name,
         second_subject_name=second.name,
-        score=score.score,
-        score_label=_score_label(score.score),
-        score_note=_score_note(score.score),
+        connection_quality=_score_note(score.score),
         is_destiny_sign=score.is_destiny_sign,
-        relevant_aspects=score.relevant_aspects,
-        relevant_default_aspects=score.relevant_default_aspects,
+        aspects=[_fmt_aspect(a) for a in score.relevant_default_aspects],
     )
 
 
