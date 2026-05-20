@@ -54,7 +54,8 @@ def _score_note(score: int) -> str:
     return (
         f"{label} (score {score}). "
         "Scale: 0–5 Null | 5–10 Mediocre | 10–15 Important | 15–20 Very Important | 20+ Exceptional. "
-        "The scale has no upper ceiling — 20 and 60 are both 'Exceptional' but very different. "
+        "Practical ceiling is ~40–55 pts (theoretical max ~78). "
+        "20 is the minimum threshold for Exceptional, not a high score. "
         "Interpret proportionally: a score built from several 4-pt base aspects carries less weight "
         "than the same total achieved through high-value Sun–Sun or Sun–Moon conjunctions (8–11 pts each)."
     )
