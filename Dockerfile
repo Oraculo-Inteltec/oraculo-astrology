@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN apk add build-base linux-headers \
+RUN apk add build-base linux-headers cairo cairo-dev pango pango-dev gdk-pixbuf gdk-pixbuf-dev \
  && pip install uv \
  && uv sync
 
