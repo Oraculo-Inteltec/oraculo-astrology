@@ -152,7 +152,11 @@ def create_subject_png(subject: Subject):
     astro = _build_subject(subject)
     chart = Chart(astro)
     chart.makeSVG()
-    png_bytes = cairosvg.svg2png(bytestring=chart.template.encode(), dpi=300)
+    png_bytes = cairosvg.svg2png(
+        bytestring=chart.template.encode(),
+        dpi=300,
+        scale=2,
+    )
     return Response(content=png_bytes, media_type="image/png")
 
 
